@@ -5,20 +5,12 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.kotlin.serialization) // <-- 1. Activation du plugin de parsing JSON
+    alias(libs.plugins.kotlin.serialization)
+    kotlin("native.cocoapods")
 }
 
 kotlin {
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "Shared"
-            isStatic = true
-        }
-    }
-
+    applyDefaultHierarchyTemplate()
     androidLibrary {
         namespace = "com.dorian_bichet.essence_maintenant.shared"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -35,10 +27,30 @@ kotlin {
         }
     }
 
+    iosArm64()
+    iosSimulatorArm64()
+
+    cocoapods {
+        summary = "Shared module for EssenceMaintenant"
+        homepage = "https://github.com/dorian-bichet/EssenceMaintenant"
+        version = "1.0"
+        ios.deploymentTarget = "16.0"
+        pod("MapLibre") {
+            version = "~> 6.0"
+        }
+        framework {
+            baseName = "Shared"
+            isStatic = true
+        }
+    }
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.client.okhttp)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
