@@ -24,8 +24,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Run iOS Simulator Tests
-        run: ./gradlew :shared:iosSimulatorArm64Test
+      - name: List Gradle tasks
+        run: ./gradlew tasks
+
+      - name: Run Tests
+        run: ./gradlew test
 
       - name: Build iOS App
         run: |
