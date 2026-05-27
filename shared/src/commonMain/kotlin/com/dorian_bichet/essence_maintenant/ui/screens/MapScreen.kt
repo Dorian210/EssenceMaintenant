@@ -126,7 +126,12 @@ fun MapScreen(
                         geometry = Point(Position(latitude = station.latitude, longitude = station.longitude)),
                         properties = buildJsonObject {
                             // On affiche le prix le plus bas trouvé !
-                            put("label_prix", "${String.format("%.2f", prixGagnant)}€")
+                            val parts = prixGagnant.toString().split(".")
+                            val integerPart = parts[0]
+                            val decimalPart = if (parts.size > 1) parts[1].take(2).padEnd(2, '0') else "00"
+                            val formattedPrice = "$integerPart.$decimalPart"
+
+                            put("label_prix", "${formattedPrice}€")
                             put("couleur_marqueur", couleurHex)
                             put("must_show", overlap)
                             put("sort_depth", prixGagnant)
