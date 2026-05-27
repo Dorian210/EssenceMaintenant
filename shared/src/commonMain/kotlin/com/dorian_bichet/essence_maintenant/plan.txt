@@ -1,0 +1,31 @@
+Jalon 1 : La Plomberie et les Dépendances (Objectif : Préparer le terrain)
+Avant d'écrire du code métier, il faut ajouter les bibliothèques nécessaires dans ton fichier gradle/libs.versions.toml et les build.gradle.kts.
+
+Réseau : Installer Ktor (le client HTTP officiel de Kotlin Multiplatform, l'équivalent de Requests en Python ou Axios en JS).
+
+Parsing : Installer Kotlinx Serialization (pour transformer le JSON/XML du gouvernement en objets Kotlin automatiquement).
+
+Carte : Intégrer un SDK de carte compatible KMP (comme Compose Multiplatform Maps ou MapLibre).
+
+Jalon 2 : Le Module Données & Algorithme (Objectif : Avoir la matière première)
+C'est la partie purement logique, sans interface graphique.
+
+Créer les modèles dans data/model/.
+
+Écrire les fonctions mathématiques dans StationRepository :
+
+Télécharger le flux de l'API.
+
+Optimisation scientifique : Créer un algorithme qui calcule la moyenne nationale ou régionale des prix pour définir mathématiquement les seuils de tes couleurs (ex: le top 25% moins cher est Vert, le pire 25% est Rouge, le reste est Orange).
+
+Jalon 3 : L'affichage de la Carte et l'Overlay (Objectif : Voir la France)
+Dans MapScreen.kt, initialiser le composant de carte pour qu'il se centre par défaut sur les coordonnées de la France.
+
+Créer le FuelSelector.kt (les boutons en haut à droite). Utiliser un état Compose (var carburantSelectionne by remember { mutableStateOf(CarburantType.SP95) }) pour savoir quel prix l'utilisateur veut voir.
+
+Jalon 4 : Les Bulle de Prix Dynamiques (Objectif : Le rendu visuel final)
+Créer le composant PriceMarker.kt : un petit rectangle arrondi avec le prix écrit dedans.
+
+Lier la couleur du fond du rectangle à ton algorithme du Jalon 2.
+
+Injecter ces marqueurs sur la carte en lisant ta liste de stations.
