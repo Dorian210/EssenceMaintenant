@@ -2,5 +2,6 @@ platform :ios, '16.0'
 
 target 'iosApp' do
   use_frameworks!
-  pod 'Shared', :path => '../shared'
+  # Le nom du pod doit correspondre au nom du projet Gradle (shared)
+  pod 'shared', :path => '../shared'
 end
