@@ -24,6 +24,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Generate Dummy Framework
+        run: ./gradlew :shared:generateDummyFramework
+
       - name: Install CocoaPods
         run: |
           cd iosApp
