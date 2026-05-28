@@ -46,4 +46,5 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_STYLE=Manual \
+            OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED=YES \
             build
