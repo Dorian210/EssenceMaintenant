@@ -34,7 +34,7 @@ kotlin {
         summary = "Shared module for EssenceMaintenant"
         homepage = "https://github.com/dorian-bichet/EssenceMaintenant"
         version = "1.0"
-        ios.deploymentTarget = "16.0"
+        ios.deploymentTarget = "17.0"
         pod("MapLibre") {
             version = "~> 6.0"
         }

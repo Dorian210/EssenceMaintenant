@@ -8,7 +8,7 @@ Pod::Spec.new do |spec|
     spec.summary                  = 'Shared module for EssenceMaintenant'
     spec.vendored_frameworks      = 'build/cocoapods/framework/Shared.framework'
     spec.libraries                = 'c++'
-    spec.ios.deployment_target    = '16.0'
+    spec.ios.deployment_target    = '17.0'
     spec.dependency 'MapLibre', '~> 6.0'
     if !Dir.exist?('build/cocoapods/framework/Shared.framework') || Dir.empty?('build/cocoapods/framework/Shared.framework')
         raise "
