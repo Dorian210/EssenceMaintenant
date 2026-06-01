@@ -28,7 +28,11 @@ kotlin {
     }
 
     iosArm64()
-    iosSimulatorArm64()
+    iosSimulatorArm64() {
+        binaries.all {
+            linkerOpts("-framework", "CoreLocation")
+        }
+    }
 
     cocoapods {
         summary = "Shared module for EssenceMaintenant"
@@ -78,6 +82,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.1")
         }
     }
 }

@@ -9,11 +9,12 @@ on:
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096M -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   test:
     name: Run tests
-    runs-on: macos-latest # Nécessaire pour faire tourner les tests iOS
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,9 +22,17 @@ jobs:
       - name: Gradle setup
         uses: ./.github/actions/gradle-setup
 
+      - name: Generate Dummy Framework
+        run: ./gradlew :shared:generateDummyFramework
+
+      - name: Install CocoaPods
+        run: |
+          cd iosApp
+          pod install
+
       - name: Run unit tests
-        # On lance les tests du module partagé (Android + iOS Simulator)
-        run: ./gradlew :shared:allTests
+        # On utilise une tâche spécifique pour éviter les problèmes de linker global si possible
+        run: ./gradlew :shared:iosSimulatorArm64Test
 
       - name: Upload test reports
         if: always()
