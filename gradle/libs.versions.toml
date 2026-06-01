@@ -16,8 +16,8 @@ material3 = "1.11.0-alpha07"
 
 # --- AJOUTS JALON 1 ---
 ktor = "3.0.3"                   # Version 3.x indispensable pour Kotlin 2.3+
-kotlinx-serialization = "1.7.3"  # Version alignée avec ton écosystème
-maplibre-compose = "0.12.1"      # Dernière révision stable du moteur de carte
+kotlinx-serialization = "1.6.3"  # Version plus stable pour la compatibilité MapLibre
+maplibre-compose = "0.13.0"      # Dernière révision stable du moteur de carte
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

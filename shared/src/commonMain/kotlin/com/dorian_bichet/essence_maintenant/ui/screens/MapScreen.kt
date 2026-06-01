@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -34,14 +35,18 @@ import com.dorian_bichet.essence_maintenant.data.model.toGeoJsonFeature
 import com.dorian_bichet.essence_maintenant.data.repository.StationRepository
 import com.dorian_bichet.essence_maintenant.ui.components.FuelSelector
 import com.dorian_bichet.essence_maintenant.ui.components.MapSettingsDrawer
+import com.dorian_bichet.essence_maintenant.utils.LocationPermissionState
 import com.dorian_bichet.essence_maintenant.utils.openMapRouting
+import com.dorian_bichet.essence_maintenant.utils.rememberLocationPermissionState
 import com.russhwolf.settings.Settings
 import essencemaintenant.shared.generated.resources.Res
 import essencemaintenant.shared.generated.resources.layers
 import essencemaintenant.shared.generated.resources.loc
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import org.maplibre.compose.camera.CameraMoveReason
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.asString
@@ -53,6 +58,12 @@ import org.maplibre.compose.expressions.dsl.offset
 import org.maplibre.compose.expressions.dsl.span
 import org.maplibre.compose.expressions.value.SymbolAnchor
 import org.maplibre.compose.layers.SymbolLayer
+import org.maplibre.compose.location.BearingUpdate
+import org.maplibre.compose.location.LocationPuck
+import org.maplibre.compose.location.LocationTrackingEffect
+import org.maplibre.compose.location.rememberDefaultLocationProvider
+import org.maplibre.compose.location.rememberNullLocationProvider
+import org.maplibre.compose.location.rememberUserLocationState
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
@@ -90,6 +101,38 @@ fun MapScreen(
             zoom = initialZoom.toDouble()
         )
     )
+
+    // GPS & Localisation
+    val permissionState = rememberLocationPermissionState()
+    val locationProvider = if (permissionState.isGranted) {
+        rememberDefaultLocationProvider()
+    } else {
+        rememberNullLocationProvider()
+    }
+    val userLocationState = rememberUserLocationState(
+        locationProvider = locationProvider,
+        samplePeriod = 2000.milliseconds // On réduit la fréquence (2s) pour les performances
+    )
+    var isTrackingUser by remember { mutableStateOf(false) }
+
+    // On arrête de suivre si l'utilisateur déplace la carte manuellement (GESTURE)
+    LaunchedEffect(camera.moveReason) {
+        if (camera.moveReason == CameraMoveReason.GESTURE) {
+            isTrackingUser = false
+        }
+    }
+
+    // Effet de suivi pour recentrer la caméra automatiquement sur chaque mise à jour GPS
+    LocationTrackingEffect(
+        locationState = userLocationState,
+        enabled = isTrackingUser,
+        trackBearing = false, // On ne suit pas l'orientation du téléphone
+    ) {
+        camera.updateFromLocation(
+            animationDuration = 500.milliseconds,
+            updateBearing = BearingUpdate.IGNORE // On conserve l'angle de vue actuel
+        )
+    }
 
     LaunchedEffect(currentMapStyle) {
         settings.putString("KEY_MAP_STYLE", currentMapStyle.name)
@@ -133,6 +176,16 @@ fun MapScreen(
                 cameraState = camera,
                 baseStyle = BaseStyle.Uri(currentMapStyle.url)
             ) {
+                // On isole la lecture de la location dans un bloc pour éviter de recomposer tout MapScreen
+                val currentLocation = userLocationState.location
+                
+                // Marqueur de position utilisateur (le "puck" bleu)
+                LocationPuck(
+                    idPrefix = "user-pos",
+                    location = currentLocation,
+                    cameraState = camera
+                )
+
                 val sourceDonnees = rememberGeoJsonSource(
                     data = GeoJsonData.Features(FeatureCollection(geoJsonFeatures))
                 )
@@ -204,6 +257,38 @@ fun MapScreen(
                         onCarburantsChanged = onCarburantsChanged
                     )
                 }
+            }
+
+            // Bouton Ma Position
+            FloatingActionButton(
+                onClick = {
+                    if (permissionState.isGranted) {
+                        // 1. On active le suivi automatique
+                        isTrackingUser = true
+                        
+                        // 2. On force un recentrage immédiat si une position est déjà connue
+                        userLocationState.location?.let { loc ->
+                            scope.launch {
+                                camera.animateTo(
+                                    finalPosition = camera.position.copy(target = loc.position.value),
+                                    duration = 500.milliseconds
+                                )
+                            }
+                        }
+                    } else {
+                        permissionState.launchPermissionRequest()
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 32.dp, end = 16.dp),
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.loc),
+                    contentDescription = "Ma position"
+                )
             }
         }
     }
