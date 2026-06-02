@@ -30,12 +30,16 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
-    // Configuration globale pour les binaires iOS (fix Xcode 16 + MapLibre)
+    // Configuration du Linker pour Xcode 16 + MapLibre
     targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
-        if (konanTarget.family.isAppleFamily) {
-            binaries.all {
-                linkerOpts("-framework", "CoreLocation")
-            }
+        binaries.all {
+            linkerOpts(
+                "-framework", "CoreLocation",
+                "-framework", "QuartzCore",
+                "-L/usr/lib/swift",
+                "-L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator",
+                "-L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/iphonesimulator"
+            )
         }
     }
 
@@ -43,13 +47,19 @@ kotlin {
         summary = "Shared module for EssenceMaintenant"
         homepage = "https://github.com/dorian-bichet/EssenceMaintenant"
         version = "1.0"
-        ios.deploymentTarget = "17.0"
+        ios.deploymentTarget = "16.0"
+        
+        // 1. LIEN CRUCIAL : Indique à Gradle où trouver les Pods installés
+        podfile = project.file("../iosApp/Podfile")
+
         pod("MapLibre") {
             version = "~> 6.0"
         }
+        
         framework {
             baseName = "Shared"
-            isStatic = true
+            // 2. PASSAGE EN DYNAMIQUE : Plus robuste pour les dépendances Apple
+            isStatic = false
         }
     }
 
@@ -72,17 +82,13 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
-            // --- AJOUTS JALON 1 ---
-            // Brique Réseau & Décodage (Ktor)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.kotlinx.serialization.json)
 
-            // Brique Cartographie graphique (MapLibre)
             implementation(libs.maplibre.compose)
 
-            // Sauvegarde de l'état à la fermeture de l'app
             implementation("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
         }
         commonTest.dependencies {
