@@ -2,7 +2,7 @@ name: KMP Build & Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 # Force l'utilisation de Node 24 pour toutes les actions afin d'éviter les deprecations
 env:
