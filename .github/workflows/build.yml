@@ -31,7 +31,7 @@ jobs:
 
       - name: Run iOS Tests
         if: matrix.os == 'macos-latest'
-        run: ./gradlew :shared:src:iosTest
+        run: ./gradlew :shared:iosTest
 
       # --- ÉTAPE 2 : COMPILATION BRUTE ---
       - name: Build Android APK
