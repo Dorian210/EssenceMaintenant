@@ -35,13 +35,6 @@ kotlin {
         if (konanTarget.family.isAppleFamily) {
             binaries.all {
                 linkerOpts("-framework", "CoreLocation")
-                // On désactive le cache pour éviter les erreurs de lien fantômes
-                @Suppress("UNUSED_VARIABLE")
-                val disableCache = (this as? org.jetbrains.kotlin.gradle.plugin.mpp.Framework)?.apply {
-                    // Cette option est parfois nécessaire en cas de crash du linker
-                }
-                // Correction directe recommandée par le compilateur :
-                freeCompilerArgs += "-Xdisable-native-cache"
             }
         }
     }
