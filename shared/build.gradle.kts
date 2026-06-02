@@ -30,13 +30,6 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
-//    // 💡 Optionnel : Tu peux garder ou enlever ce bloc selon comment iosApp lie ses frameworks.
-//    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
-//        binaries.all {
-//            linkerOpts("-framework", "CoreLocation", "-framework", "QuartzCore")
-//        }
-//    }
-
     sourceSets {
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
@@ -72,4 +65,10 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
+}
+
+tasks.register("iosTest") {
+    group = "verification"
+    description = "Lance les tests iOS sur le simulateur ARM64 de la CI"
+    dependsOn("iosSimulatorArm64Test")
 }
