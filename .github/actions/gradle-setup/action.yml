@@ -1,12 +1,17 @@
-name: gradle-setup
-description: Setup Java and Gradle
+name: 'Gradle Setup'
+description: 'Sets up JDK, Gradle, and enables Konan caching for KMP'
+
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: Setup Java
+    - name: Set up JDK
       uses: actions/setup-java@v4
       with:
-        java-version: "21"
-        distribution: "temurin"
+        distribution: 'zulu'
+        java-version: '17' # Recommandé pour la majorité des projets KMP récents
+
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
+      with:
+        # Active le cache automatique de Gradle et intègre le cache Konan (Kotlin/Native)
+        cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}

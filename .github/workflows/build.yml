@@ -1,96 +1,52 @@
-name: Build
+name: KMP Build & Test
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
-  test:
-    name: Run tests
-    runs-on: macos-latest
+  build:
+    name: Build & Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # On lance le workflow en parallèle sur Ubuntu (pour Android) et macOS (pour iOS)
+        os: [ubuntu-latest, macos-latest]
+
     steps:
-      - name: Checkout
+      - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Gradle setup
+      - name: Setup Gradle and Environment
         uses: ./.github/actions/gradle-setup
 
-      - name: Generate Dummy Framework
-        run: ./gradlew :shared:generateDummyFramework
+      # --- ÉTAPE 1 : TESTS UNITAIRES ---
+      # Exécuté sur Ubuntu pour Android / Common
+      - name: Run Android & Common Tests
+        if: matrix.os == 'ubuntu-latest'
+        run: ./gradlew :shared:testDebugUnitTest
 
-      - name: Install CocoaPods
-        run: |
-          cd iosApp
-          pod install
+      # Exécuté sur macOS pour iOS (lance le simulateur pour exécuter les tests iOS)
+      - name: Run iOS Tests
+        if: matrix.os == 'macos-latest'
+        run: ./gradlew :shared:iosX64Test
 
-      - name: Run unit tests
-        # On lance uniquement les tests communs pour éviter le linker iOS si possible, 
-        # ou on tente le test iOS avec les nouveaux flags.
-        run: ./gradlew :shared:iosSimulatorArm64Test
-
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: "**/build/reports/tests/**"
-
-  build-android:
-    name: Build Android
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Gradle setup
-        uses: ./.github/actions/gradle-setup
-
-      - name: Build Android debug APK
+      # --- ÉTAPE 2 : COMPILATION BRUTE ---
+      # Compilation de l'APK Android (génère un APK de debug)
+      - name: Build Android APK
+        if: matrix.os == 'ubuntu-latest'
         run: ./gradlew :androidApp:assembleDebug
 
-      - name: Upload Android debug APK
+      # Compilation du framework iOS / vérification de la structure iOS
+      - name: Build iOS Framework
+        if: matrix.os == 'macos-latest'
+        run: ./gradlew :shared:linkReleaseFrameworkIosArm64
+
+      # --- ÉTAPE 3 : ARCHIVAGE DES ARTIFACTS (Optionnel mais pratique) ---
+      # Permet de récupérer l'APK directement depuis l'interface GitHub
+      - name: Upload Android APK
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
-          path: androidApp/build/outputs/apk/debug/*.apk
-
-  build-ios:
-    name: Build iOS simulator app
-    runs-on: macos-latest
-    needs: test
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Gradle setup
-        uses: ./.github/actions/gradle-setup
-
-      - name: Generate Dummy Framework
-        run: ./gradlew :shared:generateDummyFramework
-
-      - name: Install CocoaPods
-        run: |
-          cd iosApp
-          pod install
-
-      - name: Build iOS simulator app
-        run: |
-          xcodebuild build \
-          -workspace iosApp/iosApp.xcworkspace \
-          -configuration Debug \
-          -scheme iosApp \
-          -sdk iphonesimulator \
-          -destination "platform=iOS Simulator,name=Any iOS Simulator Device" \
-          -derivedDataPath ./build \
-          CODE_SIGNING_ALLOWED=NO \
-          CODE_SIGN_STYLE=Manual
-
-      - name: Upload app folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: iphonesimulator-app
-          path: build/Build/Products/Debug-iphonesimulator/*.app
+          name: android-debug-apk
+          path: androidApp/build/outputs/apk/debug/androidApp-debug.apk
