@@ -2,7 +2,11 @@ name: KMP Build & Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
+
+# Force l'utilisation de Node 24 pour toutes les actions afin d'éviter les deprecations
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   build:
@@ -10,7 +14,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # On lance le workflow en parallèle sur Ubuntu (pour Android) et macOS (pour iOS)
         os: [ubuntu-latest, macos-latest]
 
     steps:
@@ -19,31 +22,29 @@ jobs:
 
       - name: Setup Gradle and Environment
         uses: ./.github/actions/gradle-setup
+        with:
+          # C'est ici qu'on lit le secret pour le transmettre à l'action composite
+          gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       # --- ÉTAPE 1 : TESTS UNITAIRES ---
-      # Exécuté sur Ubuntu pour Android / Common
       - name: Run Android & Common Tests
         if: matrix.os == 'ubuntu-latest'
         run: ./gradlew :shared:testDebugUnitTest
 
-      # Exécuté sur macOS pour iOS (lance le simulateur pour exécuter les tests iOS)
       - name: Run iOS Tests
         if: matrix.os == 'macos-latest'
         run: ./gradlew :shared:iosX64Test
 
       # --- ÉTAPE 2 : COMPILATION BRUTE ---
-      # Compilation de l'APK Android (génère un APK de debug)
       - name: Build Android APK
         if: matrix.os == 'ubuntu-latest'
         run: ./gradlew :androidApp:assembleDebug
 
-      # Compilation du framework iOS / vérification de la structure iOS
       - name: Build iOS Framework
         if: matrix.os == 'macos-latest'
         run: ./gradlew :shared:linkReleaseFrameworkIosArm64
 
-      # --- ÉTAPE 3 : ARCHIVAGE DES ARTIFACTS (Optionnel mais pratique) ---
-      # Permet de récupérer l'APK directement depuis l'interface GitHub
+      # --- ÉTAPE 3 : ARCHIVAGE DES ARTIFACTS ---
       - name: Upload Android APK
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4

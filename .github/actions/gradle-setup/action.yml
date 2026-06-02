@@ -1,6 +1,12 @@
 name: 'Gradle Setup'
 description: 'Sets up JDK, Gradle, and enables Konan caching for KMP'
 
+inputs:
+  gradle-encryption-key:
+    description: 'Encryption key for Gradle cache'
+    required: false
+    default: ''
+
 runs:
   using: 'composite'
   steps:
@@ -8,10 +14,10 @@ runs:
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
-        java-version: '17' # Recommandé pour la majorité des projets KMP récents
+        java-version: '17'
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        # Active le cache automatique de Gradle et intègre le cache Konan (Kotlin/Native)
-        cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+        # On utilise l'input de l'action composite au lieu du secret direct
+        cache-encryption-key: ${{ inputs.gradle-encryption-key }}
