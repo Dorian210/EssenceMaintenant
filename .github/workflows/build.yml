@@ -27,7 +27,7 @@ jobs:
       # --- ÉTAPE 1 : TESTS UNITAIRES ---
       - name: Run Android & Common Tests
         if: matrix.os == 'ubuntu-latest'
-        run: ./gradlew :shared:test
+        run: ./gradlew :shared:testAndroid
 
       - name: Run iOS Tests
         if: matrix.os == 'macos-latest'
