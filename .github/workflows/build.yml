@@ -4,7 +4,6 @@ on:
   push:
     branches: [ master ]
 
-# Force l'utilisation de Node 24 pour toutes les actions afin d'éviter les deprecations
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
@@ -23,7 +22,6 @@ jobs:
       - name: Setup Gradle and Environment
         uses: ./.github/actions/gradle-setup
         with:
-          # C'est ici qu'on lit le secret pour le transmettre à l'action composite
           gradle-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       # --- ÉTAPE 1 : TESTS UNITAIRES ---
@@ -33,7 +31,7 @@ jobs:
 
       - name: Run iOS Tests
         if: matrix.os == 'macos-latest'
-        run: ./gradlew :shared:iosX64Test
+        run: ./gradlew :shared:iosTest
 
       # --- ÉTAPE 2 : COMPILATION BRUTE ---
       - name: Build Android APK
