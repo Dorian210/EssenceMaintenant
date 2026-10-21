@@ -46,3 +46,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
+
+androidComponents {
+    onVariants { variant ->
+        val mainOutput = variant.outputs.singleOrNull()
+        mainOutput?.outputFileName?.set("EssenceMaintenant-${variant.name}.apk")
+    }
+}
